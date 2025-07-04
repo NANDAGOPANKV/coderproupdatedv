@@ -1,8 +1,9 @@
+
 import { useState } from 'react';
 import { FileUploader } from '@/components/FileUploader';
 import { ProjectAnalyzer } from '@/components/ProjectAnalyzer';
 import { BackendGenerator } from '@/components/BackendGenerator';
-import { Brain, Code2, ArrowRight } from 'lucide-react';
+import { Monitor, Server, ArrowRight } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 export interface ProjectData {
@@ -70,11 +71,11 @@ const Index = () => {
       <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg relative">
+            <div className="flex items-center justify-center w-12 h-8 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-lg relative overflow-hidden">
               <div className="flex items-center gap-1">
-                <Code2 className="w-3 h-3 text-white" />
-                <ArrowRight className="w-2 h-2 text-white" />
-                <Brain className="w-3 h-3 text-white" />
+                <Monitor className="w-3 h-3 text-white" />
+                <ArrowRight className="w-2.5 h-2.5 text-white/80" />
+                <Server className="w-3 h-3 text-white" />
               </div>
             </div>
             <div>
@@ -92,11 +93,11 @@ const Index = () => {
           {/* Upload Section */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl mb-4">
-                <div className="flex items-center gap-2">
-                  <Code2 className="w-6 h-6 text-blue-600" />
-                  <ArrowRight className="w-4 h-4 text-blue-500" />
-                  <Brain className="w-6 h-6 text-indigo-600" />
+              <div className="inline-flex items-center justify-center w-20 h-12 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-2xl mb-4 border border-emerald-100/50">
+                <div className="flex items-center gap-3">
+                  <Monitor className="w-6 h-6 text-emerald-600" />
+                  <ArrowRight className="w-4 h-4 text-slate-400" />
+                  <Server className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
               <h2 className="text-2xl font-bold text-slate-800 mb-2">
