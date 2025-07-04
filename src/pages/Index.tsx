@@ -1,9 +1,9 @@
-
 import { useState } from 'react';
 import { FileUploader } from '@/components/FileUploader';
 import { ProjectAnalyzer } from '@/components/ProjectAnalyzer';
 import { BackendGenerator } from '@/components/BackendGenerator';
-import { Brain, Code2 } from 'lucide-react';
+import { Brain, Code2, ArrowRight } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 export interface ProjectData {
   name: string;
@@ -21,6 +21,13 @@ const Index = () => {
   const [projectData, setProjectData] = useState<ProjectData | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [generationComplete, setGenerationComplete] = useState(false);
+
+  const handleFeedbackSubmit = () => {
+    toast({
+      title: "Feedback Submitted!",
+      description: "Thank you for your feedback. We'll review it soon.",
+    });
+  };
 
   const handleProjectAnalysis = async (data: any) => {
     setIsAnalyzing(true);
@@ -63,12 +70,16 @@ const Index = () => {
       <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg">
-              <Brain className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg relative">
+              <div className="flex items-center gap-1">
+                <Code2 className="w-3 h-3 text-white" />
+                <ArrowRight className="w-2 h-2 text-white" />
+                <Brain className="w-3 h-3 text-white" />
+              </div>
             </div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                Code.Pro
+                Coder.Pro
               </h1>
               <p className="text-sm text-slate-600">Frontend → Backend Generator</p>
             </div>
@@ -82,7 +93,11 @@ const Index = () => {
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
             <div className="text-center mb-8">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl mb-4">
-                <Code2 className="w-8 h-8 text-blue-600" />
+                <div className="flex items-center gap-2">
+                  <Code2 className="w-6 h-6 text-blue-600" />
+                  <ArrowRight className="w-4 h-4 text-blue-500" />
+                  <Brain className="w-6 h-6 text-indigo-600" />
+                </div>
               </div>
               <h2 className="text-2xl font-bold text-slate-800 mb-2">
                 Transform Your Frontend into a Full-Stack App
@@ -120,7 +135,10 @@ const Index = () => {
           <footer className="text-center py-8 border-t border-slate-200 bg-white/50 rounded-2xl">
             <p className="text-slate-600 text-sm">
               Have feedback? 
-              <button className="text-blue-600 hover:text-blue-700 ml-1 font-medium transition-colors">
+              <button 
+                onClick={handleFeedbackSubmit}
+                className="text-blue-600 hover:text-blue-700 ml-1 font-medium transition-colors"
+              >
                 Submit Feedback
               </button>
               {' | '}
