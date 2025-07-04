@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Zap, Download, Cloud, Code2, Database, Shield, Mail, CheckCircle, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,7 +42,7 @@ export const BackendGenerator = ({ projectData, onGenerationComplete, isComplete
   };
 
   const handleDownload = () => {
-    toast.success('Backend ZIP file downloaded!');
+    toast.success('Backend ZIP file downloaded! Follow the instructions below to get started.');
     // In a real implementation, this would trigger a file download
   };
 
@@ -211,17 +210,41 @@ export const BackendGenerator = ({ projectData, onGenerationComplete, isComplete
               </div>
             </div>
 
+            {/* Installation Instructions */}
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="p-4">
+                <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                  <Code2 className="w-4 h-4" />
+                  Getting Started Instructions
+                </h4>
+                <div className="space-y-2 text-sm text-blue-700">
+                  <p className="font-medium">After downloading, follow these steps:</p>
+                  <div className="bg-white rounded p-3 font-mono text-xs space-y-1">
+                    <div>1. Extract the ZIP file</div>
+                    <div>2. cd backend</div>
+                    <div>3. npm install</div>
+                    <div>4. cp .env.example .env</div>
+                    <div>5. Configure your environment variables</div>
+                    <div>6. npm start</div>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-2">
+                    📝 Don't forget to set up your database connection and email service in the .env file
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={handleDownload} className="flex-1">
+              <Button onClick={handleDownload} className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
                 <Download className="w-4 h-4 mr-2" />
                 Download Backend ZIP
               </Button>
-              <Button onClick={handleDeploy} variant="outline" className="flex-1">
+              <Button onClick={handleDeploy} variant="outline" className="flex-1 border-purple-300 text-purple-700 hover:bg-purple-50">
                 <Cloud className="w-4 h-4 mr-2" />
                 Deploy to Railway
               </Button>
-              <Button variant="ghost" className="flex-1">
+              <Button variant="ghost" className="flex-1 text-purple-700 hover:bg-purple-50">
                 <ExternalLink className="w-4 h-4 mr-2" />
                 View Preview
               </Button>
