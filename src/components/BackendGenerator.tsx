@@ -107,7 +107,7 @@ export const BackendGenerator = ({ projectData, onGenerationComplete, isComplete
       setGenerationProgress(0);
       setCurrentStep('Sending summary to AI model...');
 
-      const res = await fetch('http://localhost:3000/generate', {
+      const res = await fetch('https://susi-backend.onrender.com/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ aiSummary: projectData.aiSummary }),

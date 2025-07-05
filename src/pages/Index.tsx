@@ -86,12 +86,12 @@ const Index = () => {
                     const formData = new FormData();
                     formData.append('zip', file);
 
-                    response = await fetch('http://localhost:3000/summarize', {
+                    response = await fetch('https://susi-backend.onrender.com/summarize', {
                       method: 'POST',
                       body: formData,
                     });
                   } else {
-                    response = await fetch('http://localhost:3000/summarize', {
+                    response = await fetch('https://susi-backend.onrender.com/summarize', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ repoUrl: url }),
