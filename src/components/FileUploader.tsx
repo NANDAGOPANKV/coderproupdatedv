@@ -1,18 +1,28 @@
-
 import { useState } from 'react';
 import { Upload, Github, Folder, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 
 interface FileUploaderProps {
   onAnalysisStart: (data: any) => void;
   isAnalyzing: boolean;
+  onRepoSet?: (url: string) => void; // ✅ Optional prop
 }
 
-export const FileUploader = ({ onAnalysisStart, isAnalyzing }: FileUploaderProps) => {
+export const FileUploader = ({
+  onAnalysisStart,
+  isAnalyzing,
+  onRepoSet,
+}: FileUploaderProps) => {
   const [githubUrl, setGithubUrl] = useState('');
   const [selectedFramework, setSelectedFramework] = useState('react');
   const [uploadMethod, setUploadMethod] = useState<'file' | 'github'>('file');
@@ -23,8 +33,8 @@ export const FileUploader = ({ onAnalysisStart, isAnalyzing }: FileUploaderProps
       toast.error('Please upload a .zip file');
       return;
     }
-    
-    if (file.size > 50 * 1024 * 1024) { // 50MB limit
+
+    if (file.size > 50 * 1024 * 1024) {
       toast.error('File size must be less than 50MB');
       return;
     }
@@ -33,7 +43,7 @@ export const FileUploader = ({ onAnalysisStart, isAnalyzing }: FileUploaderProps
     onAnalysisStart({
       name: file.name.replace('.zip', ''),
       framework: selectedFramework,
-      source: 'file'
+      source: 'file',
     });
   };
 
@@ -43,7 +53,6 @@ export const FileUploader = ({ onAnalysisStart, isAnalyzing }: FileUploaderProps
       return;
     }
 
-    // Basic GitHub URL validation
     const githubPattern = /^https:\/\/github\.com\/[\w-]+\/[\w-]+\/?$/;
     if (!githubPattern.test(githubUrl)) {
       toast.error('Please enter a valid GitHub repository URL');
@@ -52,11 +61,15 @@ export const FileUploader = ({ onAnalysisStart, isAnalyzing }: FileUploaderProps
 
     toast.success('GitHub repository loaded!');
     const repoName = githubUrl.split('/').pop() || 'repository';
+
+    // ✅ Set the repo URL in parent
+    onRepoSet?.(githubUrl);
+
     onAnalysisStart({
       name: repoName,
       framework: selectedFramework,
       source: 'github',
-      url: githubUrl
+      url: githubUrl,
     });
   };
 
@@ -73,7 +86,6 @@ export const FileUploader = ({ onAnalysisStart, isAnalyzing }: FileUploaderProps
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
       handleFileUpload(files[0]);
@@ -85,24 +97,22 @@ export const FileUploader = ({ onAnalysisStart, isAnalyzing }: FileUploaderProps
       {/* Upload Method Toggle */}
       <div className="flex justify-center">
         <div className="inline-flex p-1 bg-slate-100 rounded-lg">
-          <button
+          {/* <button
             onClick={() => setUploadMethod('file')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              uploadMethod === 'file'
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${uploadMethod === 'file'
                 ? 'bg-white text-slate-800 shadow-sm'
                 : 'text-slate-600 hover:text-slate-800'
-            }`}
+              }`}
           >
             <Upload className="w-4 h-4 inline mr-2" />
             Upload File
-          </button>
+          </button> */}
           <button
             onClick={() => setUploadMethod('github')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              uploadMethod === 'github'
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-slate-600 hover:text-slate-800'
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${uploadMethod === 'github'
+              ? 'bg-white text-slate-800 shadow-sm'
+              : 'text-slate-600 hover:text-slate-800'
+              }`}
           >
             <Github className="w-4 h-4 inline mr-2" />
             GitHub URL
@@ -110,23 +120,29 @@ export const FileUploader = ({ onAnalysisStart, isAnalyzing }: FileUploaderProps
         </div>
       </div>
 
-      {uploadMethod === 'file' ? (
+      {/* File Upload UI */}
+      {/* {uploadMethod === 'file' ? (
         <Card className="border-2 border-dashed border-slate-300 hover:border-blue-400 transition-colors">
           <CardContent className="p-8">
             <div
-              className={`text-center space-y-4 ${isDragOver ? 'scale-105' : ''} transition-transform`}
+              className={`text-center space-y-4 ${isDragOver ? 'scale-105' : ''
+                } transition-transform`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
               <div className="flex justify-center">
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                  isDragOver ? 'bg-blue-100' : 'bg-slate-100'
-                } transition-colors`}>
-                  <Folder className={`w-8 h-8 ${isDragOver ? 'text-blue-600' : 'text-slate-600'}`} />
+                <div
+                  className={`w-16 h-16 rounded-full flex items-center justify-center ${isDragOver ? 'bg-blue-100' : 'bg-slate-100'
+                    } transition-colors`}
+                >
+                  <Folder
+                    className={`w-8 h-8 ${isDragOver ? 'text-blue-600' : 'text-slate-600'
+                      }`}
+                  />
                 </div>
               </div>
-              
+
               <div>
                 <h3 className="text-lg font-semibold text-slate-800 mb-2">
                   Upload Frontend Repository
@@ -134,11 +150,13 @@ export const FileUploader = ({ onAnalysisStart, isAnalyzing }: FileUploaderProps
                 <p className="text-slate-600 mb-4">
                   Drag and drop your .zip file here, or click to browse
                 </p>
-                
+
                 <input
                   type="file"
                   accept=".zip"
-                  onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                  onChange={(e) =>
+                    e.target.files?.[0] && handleFileUpload(e.target.files[0])
+                  }
                   className="hidden"
                   id="file-upload"
                 />
@@ -151,56 +169,67 @@ export const FileUploader = ({ onAnalysisStart, isAnalyzing }: FileUploaderProps
                   </Button>
                 </label>
               </div>
-              
+
               <p className="text-xs text-slate-500">
                 Maximum file size: 50MB • Supported format: .zip
               </p>
             </div>
           </CardContent>
         </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                <Link2 className="w-5 h-5 text-slate-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-800">GitHub Repository</h3>
-                <p className="text-sm text-slate-600">Enter the URL of your public repository</p>
-              </div>
+      ) : ( */}
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+              <Link2 className="w-5 h-5 text-slate-600" />
             </div>
-            
-            <div className="space-y-3">
-              <Input
-                placeholder="https://github.com/username/repository"
-                value={githubUrl}
-                onChange={(e) => setGithubUrl(e.target.value)}
-                className="font-mono text-sm"
-              />
-              
-              <Button 
-                onClick={handleGithubSubmit}
-                disabled={isAnalyzing}
-                className="w-full"
-              >
-                <Github className="w-4 h-4 mr-2" />
-                {isAnalyzing ? 'Analyzing...' : 'Analyze Repository'}
-              </Button>
+            <div>
+              <h3 className="font-semibold text-slate-800">
+                GitHub Repository
+              </h3>
+              <p className="text-sm text-slate-600">
+                Enter the URL of your public repository
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+
+          <div className="space-y-3">
+            <Input
+              placeholder="https://github.com/username/repository"
+              value={githubUrl}
+              onChange={(e) => setGithubUrl(e.target.value)}
+              className="font-mono text-sm"
+            />
+
+            <Button
+              onClick={handleGithubSubmit}
+              disabled={isAnalyzing}
+              className="w-full"
+            >
+              <Github className="w-4 h-4 mr-2" />
+              {isAnalyzing ? 'Analyzing...' : 'Analyze Repository'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      {/* )} */}
 
       {/* Framework Selection */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-slate-800 mb-1">Framework Detection</h3>
-              <p className="text-sm text-slate-600">Help us understand your frontend better (optional)</p>
+              <h3 className="font-semibold text-slate-800 mb-1">
+                Framework Detection
+              </h3>
+              <p className="text-sm text-slate-600">
+                Help us understand your frontend better (optional)
+              </p>
             </div>
-            <Select value={selectedFramework} onValueChange={setSelectedFramework}>
+            <Select
+              value={selectedFramework}
+              onValueChange={setSelectedFramework}
+            >
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>

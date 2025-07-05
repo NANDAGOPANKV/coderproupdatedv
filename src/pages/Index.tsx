@@ -2,63 +2,37 @@ import { useState } from 'react';
 import { FileUploader } from '@/components/FileUploader';
 import { ProjectAnalyzer } from '@/components/ProjectAnalyzer';
 import { BackendGenerator } from '@/components/BackendGenerator';
-import { Monitor, Server, ArrowRight, Brain } from 'lucide-react';
+import { Brain } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 export interface ProjectData {
-  name: string;
-  framework: string;
-  structure: Array<{
-    path: string;
-    type: 'file' | 'folder';
-    children?: Array<{ path: string; type: 'file' | 'folder' }>;
-  }>;
-  detectedApis: string[];
+  repoUrl?: string;
+  framework?: string;
+  files: Array<{ filename: string; code: string }>;
+  detectedApis?: string[];
   aiSummary: string;
+  structure: string[];
 }
+
 
 const Index = () => {
   const [projectData, setProjectData] = useState<ProjectData | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [generationComplete, setGenerationComplete] = useState(false);
+  const [repoUrl, setRepoUrl] = useState<string | null>(null);
+
 
   const handleFeedbackSubmit = () => {
+    // open Google Form in a new tab
+    window.open('https://forms.gle/xdzg11DWCYSJSZqKA', '_blank');
+
+    // show toast message
     toast({
-      title: "Feedback Submitted!",
-      description: "Thank you for your feedback. We'll review it soon.",
+      title: 'Opening Feedback Form...',
+      description: "Please fill out the form in the new tab.",
     });
   };
 
-  const handleProjectAnalysis = async (data: any) => {
-    setIsAnalyzing(true);
-    
-    // Simulate AI analysis
-    setTimeout(() => {
-      const mockProjectData: ProjectData = {
-        name: data.name || 'Frontend Project',
-        framework: data.framework || 'React',
-        structure: [
-          {
-            path: '/src',
-            type: 'folder',
-            children: [
-              { path: '/src/pages', type: 'folder' },
-              { path: '/src/components', type: 'folder' },
-              { path: '/src/api', type: 'folder' }
-            ]
-          },
-          { path: '/src/pages/login.js', type: 'file' },
-          { path: '/src/pages/register.js', type: 'file' },
-          { path: '/src/components/ContactForm.js', type: 'file' }
-        ],
-        detectedApis: ['/api/login', '/api/register', '/api/contact'],
-        aiSummary: 'This app contains login, registration, and a contact form. A backend with authentication, user models, and email controller will be generated.'
-      };
-      
-      setProjectData(mockProjectData);
-      setIsAnalyzing(false);
-    }, 2000);
-  };
 
   const handleGenerationComplete = () => {
     setGenerationComplete(true);
@@ -92,31 +66,67 @@ const Index = () => {
                 <Brain className="w-8 h-8 text-purple-600" />
               </div>
               <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                Transform Your Frontend into a Full-Stack App
-              </h2>
+                Drop your GitHub repo URL. AI builds your backend stack.              </h2>
               <p className="text-slate-600 max-w-2xl mx-auto">
-                Upload your frontend repository or paste a GitHub URL, and our AI will analyze your code 
-                to generate a complete backend with APIs, authentication, and database models.
-              </p>
+                Includes routes, controllers, models, config, and server.js — structured, readable, and ready to run.              </p>
             </div>
-            
-            <FileUploader 
-              onAnalysisStart={handleProjectAnalysis}
+
+            <FileUploader
+              onAnalysisStart={async (payload) => {
+                const { source, url } = payload;
+                setIsAnalyzing(true);
+                try {
+                  let response;
+
+                  if (source === 'file') {
+                    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+                    const file = input?.files?.[0];
+                    if (!file) throw new Error('No ZIP file found');
+
+                    const formData = new FormData();
+                    formData.append('zip', file);
+
+                    response = await fetch('http://localhost:3000/summarize', {
+                      method: 'POST',
+                      body: formData,
+                    });
+                  } else {
+                    response = await fetch('http://localhost:3000/summarize', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ repoUrl: url }),
+                    });
+                  }
+
+                  if (!response.ok) throw new Error('Analysis failed');
+                  const data: ProjectData = await response.json();
+                  setProjectData(data);
+                  toast({ title: 'Analysis Complete' });
+                } catch (err) {
+                  console.error('Analysis failed:', err);
+                  toast({ title: 'Error', description: 'Failed to analyze project.' });
+                } finally {
+                  setIsAnalyzing(false);
+                }
+              }}
               isAnalyzing={isAnalyzing}
+              onRepoSet={(url) => setRepoUrl(url)}
             />
           </div>
 
           {/* Project Analysis */}
           {(projectData || isAnalyzing) && (
-            <ProjectAnalyzer 
+            <ProjectAnalyzer
               projectData={projectData}
               isAnalyzing={isAnalyzing}
+              setIsAnalyzing={setIsAnalyzing}
+              setProjectData={setProjectData}
             />
           )}
 
           {/* Backend Generator */}
           {projectData && (
-            <BackendGenerator 
+            <BackendGenerator
               projectData={projectData}
               onGenerationComplete={handleGenerationComplete}
               isComplete={generationComplete}
@@ -126,8 +136,8 @@ const Index = () => {
           {/* Footer */}
           <footer className="text-center py-8 border-t border-slate-200 bg-white/50 rounded-2xl">
             <p className="text-slate-600 text-sm">
-              Have feedback? 
-              <button 
+              Have feedback?
+              <button
                 onClick={handleFeedbackSubmit}
                 className="text-blue-600 hover:text-blue-700 ml-1 font-medium transition-colors"
               >

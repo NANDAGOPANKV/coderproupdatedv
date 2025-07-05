@@ -1,7 +1,19 @@
-
-import { useState } from 'react';
-import { ChevronRight, ChevronDown, File, Folder, Brain, RefreshCw, CheckCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import {
+  File,
+  Folder,
+  Brain,
+  RefreshCw,
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProjectData } from '@/pages/Index';
@@ -9,53 +21,121 @@ import { ProjectData } from '@/pages/Index';
 interface ProjectAnalyzerProps {
   projectData: ProjectData | null;
   isAnalyzing: boolean;
+  setProjectData: (data: ProjectData) => void;
+  setIsAnalyzing: (val: boolean) => void;
 }
 
-export const ProjectAnalyzer = ({ projectData, isAnalyzing }: ProjectAnalyzerProps) => {
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['/src']));
+export const ProjectAnalyzer = ({
+  projectData,
+  isAnalyzing,
+  setProjectData,
+  setIsAnalyzing,
+}: ProjectAnalyzerProps) => {
+  const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
+  const [repoURL, setRepoURL] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (projectData?.structure) {
+      const folders = new Set<string>();
+      for (const path of projectData.structure) {
+        const parts = path.split('/');
+        for (let i = 1; i < parts.length; i++) {
+          const folderPath = parts.slice(0, i).join('/');
+          folders.add(folderPath);
+        }
+      }
+
+      const defaultOpenState: Record<string, boolean> = {};
+      folders.forEach(folder => {
+        defaultOpenState[folder] = true;
+      });
+
+      setOpenFolders(defaultOpenState);
+    }
+  }, [projectData?.structure]);
 
   const toggleFolder = (path: string) => {
-    const newExpanded = new Set(expandedFolders);
-    if (expandedFolders.has(path)) {
-      newExpanded.delete(path);
-    } else {
-      newExpanded.add(path);
-    }
-    setExpandedFolders(newExpanded);
+    setOpenFolders(prev => ({ ...prev, [path]: !prev[path] }));
   };
 
-  const renderFileTree = (items: ProjectData['structure'], level = 0) => {
-    return items.map((item, index) => (
-      <div key={`${item.path}-${index}`} className={`ml-${level * 4}`}>
-        <div
-          className="flex items-center gap-2 py-1 px-2 hover:bg-slate-50 rounded cursor-pointer text-sm"
-          onClick={() => item.type === 'folder' && toggleFolder(item.path)}
-        >
-          {item.type === 'folder' ? (
-            <>
-              {expandedFolders.has(item.path) ? (
-                <ChevronDown className="w-4 h-4 text-slate-400" />
+  const buildTree = (paths: string[]) => {
+    const root: any = {};
+    for (const path of paths) {
+      const parts = path.split('/');
+      let current = root;
+      parts.forEach((part, i) => {
+        if (!current[part]) {
+          current[part] = i === parts.length - 1 ? null : {};
+        }
+        current = current[part];
+      });
+    }
+    return root;
+  };
+
+  const renderTree = (node: any, parentPath = '') => {
+    return Object.entries(node).map(([key, value]) => {
+      const currentPath = parentPath ? `${parentPath}/${key}` : key;
+      const isFolder = value !== null;
+      const isOpen = openFolders[currentPath];
+
+      return (
+        <div key={currentPath}>
+          <div
+            className="flex items-center gap-2 py-1 px-2 text-sm cursor-pointer hover:bg-slate-100 rounded"
+            style={{ marginLeft: `${currentPath.split('/').length * 10}px` }}
+            onClick={() => isFolder && toggleFolder(currentPath)}
+          >
+            {isFolder ? (
+              isOpen ? (
+                <ChevronDown className="w-4 h-4 text-blue-500" />
               ) : (
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-              )}
-              <Folder className="w-4 h-4 text-blue-500" />
-            </>
-          ) : (
-            <>
-              <div className="w-4" />
+                <ChevronRight className="w-4 h-4 text-blue-500" />
+              )
+            ) : (
               <File className="w-4 h-4 text-slate-400" />
-            </>
-          )}
-          <span className="text-slate-700 font-mono">{item.path.split('/').pop()}</span>
-        </div>
-        
-        {item.type === 'folder' && item.children && expandedFolders.has(item.path) && (
-          <div className="ml-4">
-            {renderFileTree(item.children, level + 1)}
+            )}
+            {isFolder ? (
+              <span className="text-blue-700 font-medium">{key}</span>
+            ) : (
+              <span className="text-slate-700 font-mono">{key}</span>
+            )}
           </div>
-        )}
-      </div>
-    ));
+          {isFolder && isOpen && renderTree(value, currentPath)}
+        </div>
+      );
+    });
+  };
+
+  const regenerateAnalysis = async () => {
+    console.log(projectData?.repoUrl, "dskjfdks");
+
+    if (projectData?.repoUrl) {
+
+      try {
+        setIsAnalyzing(true);
+        const response = await fetch('/summarize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ repoUrl: projectData.repoUrl }),
+        });
+
+        if (!response.ok) throw new Error('Failed to regenerate');
+
+        const updated = await response.json();
+        setProjectData(updated);
+      } catch (err) {
+        alert('Regeneration failed.');
+        console.error(err);
+      } finally {
+        setIsAnalyzing(false);
+      }
+
+    } else {
+      alert('Missing repo URL');
+      return;
+    }
+
   };
 
   if (isAnalyzing) {
@@ -75,7 +155,6 @@ export const ProjectAnalyzer = ({ projectData, isAnalyzing }: ProjectAnalyzerPro
               </p>
             </div>
           </div>
-          
           <div className="mt-6 space-y-2">
             <div className="flex items-center text-sm text-blue-700">
               <div className="w-2 h-2 bg-blue-400 rounded-full mr-3 animate-pulse" />
@@ -95,7 +174,9 @@ export const ProjectAnalyzer = ({ projectData, isAnalyzing }: ProjectAnalyzerPro
     );
   }
 
-  if (!projectData) return null;
+  if (!projectData?.files || !Array.isArray(projectData.files)) {
+    return <div className="text-red-500">Project files are missing or invalid.</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -115,15 +196,15 @@ export const ProjectAnalyzer = ({ projectData, isAnalyzing }: ProjectAnalyzerPro
         <CardContent>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-white rounded-lg">
-              <div className="text-2xl font-bold text-slate-800">{projectData.structure.length}</div>
+              <div className="text-2xl font-bold text-slate-800">{projectData.files.length}</div>
               <div className="text-sm text-slate-600">Files Detected</div>
             </div>
             <div className="text-center p-4 bg-white rounded-lg">
-              <div className="text-2xl font-bold text-slate-800">{projectData.detectedApis.length}</div>
+              <div className="text-2xl font-bold text-slate-800">{projectData?.detectedApis?.length ?? 0}</div>
               <div className="text-sm text-slate-600">API Endpoints</div>
             </div>
             <div className="text-center p-4 bg-white rounded-lg">
-              <div className="text-2xl font-bold text-slate-800 capitalize">{projectData.framework}</div>
+              <div className="text-2xl font-bold text-slate-800 capitalize">{projectData.framework ?? 'N/A'}</div>
               <div className="text-sm text-slate-600">Framework</div>
             </div>
           </div>
@@ -131,22 +212,22 @@ export const ProjectAnalyzer = ({ projectData, isAnalyzing }: ProjectAnalyzerPro
       </Card>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* File Structure */}
+        {/* File Tree */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Folder className="w-5 h-5 text-blue-600" />
-              Project Structure
+              Project Files
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="bg-slate-50 rounded-lg p-4 max-h-80 overflow-y-auto font-mono text-sm">
-              {renderFileTree(projectData.structure)}
+              {renderTree(buildTree(projectData.structure))}
             </div>
           </CardContent>
         </Card>
 
-        {/* AI Analysis */}
+        {/* AI Summary */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -156,27 +237,28 @@ export const ProjectAnalyzer = ({ projectData, isAnalyzing }: ProjectAnalyzerPro
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-purple-50 rounded-lg p-4">
-              <p className="text-slate-700 leading-relaxed">
+              <p className="text-slate-700 leading-relaxed whitespace-pre-line">
                 {projectData.aiSummary}
               </p>
             </div>
-            
-            {/* Detected APIs */}
-            <div>
-              <h4 className="font-semibold text-slate-800 mb-2">Detected API Endpoints:</h4>
-              <div className="flex flex-wrap gap-2">
-                {projectData.detectedApis.map((api, index) => (
-                  <Badge key={index} variant="secondary" className="font-mono">
-                    {api}
-                  </Badge>
-                ))}
-              </div>
-            </div>
 
-            <Button variant="outline" size="sm" className="w-full">
+            {projectData.detectedApis?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-slate-800 mb-2">Detected API Endpoints:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {projectData.detectedApis.map((api, index) => (
+                    <Badge key={index} variant="secondary" className="font-mono">
+                      {api}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Regen Analysis we have to work again later. */}
+            {/* <Button variant="outline" size="sm" className="w-full" onClick={regenerateAnalysis}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Regenerate Analysis
-            </Button>
+            </Button> */}
           </CardContent>
         </Card>
       </div>
