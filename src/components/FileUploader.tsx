@@ -187,7 +187,7 @@ export const FileUploader = ({
               <h3 className="font-semibold text-slate-800">
                 GitHub Repository
               </h3>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-red-700">
                 Enter the URL of your public repository
               </p>
             </div>
