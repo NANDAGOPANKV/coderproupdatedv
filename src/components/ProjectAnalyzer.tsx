@@ -236,11 +236,12 @@ export const ProjectAnalyzer = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-purple-50 rounded-lg p-4">
+            <div className="bg-purple-50 rounded-lg p-4 max-h-[400px] overflow-y-auto">
               <p className="text-slate-700 leading-relaxed whitespace-pre-line">
                 {projectData.aiSummary}
               </p>
             </div>
+
 
             {projectData.detectedApis?.length > 0 && (
               <div>

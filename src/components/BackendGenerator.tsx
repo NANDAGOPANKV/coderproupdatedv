@@ -61,7 +61,10 @@ export const BackendGenerator = ({ projectData, onGenerationComplete, isComplete
   const [currentStep, setCurrentStep] = useState('');
   const [generatedStructure, setGeneratedStructure] = useState<FileNode | null>(null);
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null); // ✅
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null); // 
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [fileContents, setFileContents] = useState<Record<string, string>>({});
+
 
   const generationSteps = [
     { icon: Database, label: 'Creating database models', progress: 20 },
@@ -105,6 +108,12 @@ export const BackendGenerator = ({ projectData, onGenerationComplete, isComplete
     try {
       setIsGenerating(true);
       setGenerationProgress(0);
+      setCurrentStep('Waking backend...');
+
+      // ⏱ Ping first to warm up the server (for Render)
+      await fetch('https://susi-backend.onrender.com/ping');
+      await new Promise(r => setTimeout(r, 1500)); // wait for server to wake
+
       setCurrentStep('Sending summary to AI model...');
 
       const res = await fetch('https://susi-backend.onrender.com/generate', {
@@ -113,7 +122,11 @@ export const BackendGenerator = ({ projectData, onGenerationComplete, isComplete
         body: JSON.stringify({ aiSummary: projectData.aiSummary }),
       });
 
-      if (!res.ok) throw new Error('Failed to generate backend');
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('❌ Backend error:', res.status, errorText);
+        throw new Error('Failed to generate backend (bad response)');
+      }
 
       const data = await res.json();
       const filePaths = data.backendCode
@@ -123,7 +136,7 @@ export const BackendGenerator = ({ projectData, onGenerationComplete, isComplete
       const tree = buildFileTree(filePaths);
       setGeneratedStructure(tree);
       setExpandedFolders(expandAllFolders(tree));
-      setDownloadUrl(data.downloadUrl || null); // ✅
+      setDownloadUrl(data.downloadUrl || null);
 
       for (const step of generationSteps) {
         setCurrentStep(step.label);
@@ -133,12 +146,14 @@ export const BackendGenerator = ({ projectData, onGenerationComplete, isComplete
 
       toast.success('✅ Backend generated successfully!');
       onGenerationComplete();
+
     } catch (err) {
       console.error('❌ Backend generation failed:', err);
       toast.error('Backend generation failed. Please try again.');
       setIsGenerating(false);
     }
   };
+
 
   const handleDownload = async () => {
     if (!downloadUrl) {
